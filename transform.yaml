@@ -1,0 +1,34 @@
+#@ load("@ytt:overlay", "overlay")
+#@ def dump(thing):
+#@   print(thing)
+#@   for val in thing:
+#@     print(val)
+#@     print(thing[val])
+#@   end
+#@ end
+#@ def copy_all_except(src, dst, omissions):
+#@   for name in src:
+#@     if name not in omissions:
+#@       dst[name] = src[name]
+#@     end
+#@   end
+#@ end
+#@ def make_modified_copy(src, name, value):
+#@   dst = {}
+#@   copy_all_except(src, dst, [ name ])
+#@   dst[name] = value
+#@   return dst
+#@ end
+#@ def do_transform(input, _):
+#@   # print("Input:")
+#@   # dump(input)
+#@   # This fails with:
+#@   # ytt: Error: Overlaying (in following order: transform.yaml):
+#@   #   Document on line transform.yaml:14: yamlfragment.SetKey:
+#@   #     Not implemented
+#@   # input["somename"] = "newvalue"
+#@   return make_modified_copy(input, "somename", "newvalue")
+#@ end
+#@overlay/match by=overlay.all, expects="1+"
+#@overlay/replace via=do_transform
+---
