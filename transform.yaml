@@ -13,21 +13,27 @@
 #@     end
 #@   end
 #@ end
-#@ def make_modified_copy(src, name, value):
+#! make_modified_copy_map is a workaround for this not working:
+#! input["somename"] = "newvalue"
+#! which fails with:
+#! ytt: Error: Overlaying (in following order: transform.yaml):
+#!   Document on line transform.yaml:14: yamlfragment.SetKey:
+#!     Not implemented
+#! Strangely, the same syntax does work with arrays - you can do:
+#!   ret = [ 1, 2, 3 ]
+#!   ret[1] = 42
+#@ def make_modified_copy_map(src, attr_name, new_attr_value):
 #@   dst = {}
-#@   copy_all_except(src, dst, [ name ])
-#@   dst[name] = value
+#@   copy_all_except(src, dst, [ attr_name ])
+#@   dst[attr_name] = new_attr_value
 #@   return dst
 #@ end
 #@ def do_transform(input, _):
 #@   # print("Input:")
 #@   # dump(input)
-#@   # This fails with:
-#@   # ytt: Error: Overlaying (in following order: transform.yaml):
-#@   #   Document on line transform.yaml:14: yamlfragment.SetKey:
-#@   #     Not implemented
-#@   # input["somename"] = "newvalue"
-#@   return make_modified_copy(input, "somename", "newvalue")
+#@   ret = make_modified_copy_map(input, "somename", "newvalue")
+#@   ret = "hello" + "truthy" + "more"
+#@   return ret
 #@ end
 #@overlay/match by=overlay.all, expects="1+"
 #@overlay/replace via=do_transform
