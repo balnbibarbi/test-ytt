@@ -11,9 +11,6 @@ end
 def to_primitive(yaml_fragment):
   return yaml.decode(yaml.encode(yaml_fragment))
 end
-def yamlfragment_type(yaml_fragment):
-  return type(to_primitive(yaml_fragment))
-end
 # FIXME: Violates the DRY principle - thrice!
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,
