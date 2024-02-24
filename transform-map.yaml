@@ -1,0 +1,11 @@
+#@ load("transforms.star", "transforms")
+#@ load("@ytt:overlay", "overlay")
+#@ def do_transform(input, _):
+#@   # print("Input:")
+#@   # dump(input)
+#@   ret = transforms.make_modified_copy_map(input, "somename", "newvalue")
+#@   return ret
+#@ end
+#@overlay/match by=overlay.all, expects="1+"
+#@overlay/replace via=do_transform
+---
