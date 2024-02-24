@@ -1,4 +1,5 @@
 load("@ytt:struct", "struct")
+load("@ytt:yaml", "yaml")
 def dump(thing):
   print(thing)
   for val in thing:
@@ -43,8 +44,27 @@ def make_modified_copy_array(src, index, new_value):
   dst[index] = new_value
   return dst
 end
+# Found at: https://github.com/carvel-dev/ytt/issues/20
+def to_primitive(yaml_fragment):
+  return yaml.decode(yaml.encode(yaml_fragment))
+end
+def yamlfragment_type(yaml_fragment):
+  return type(to_primitive(yaml_fragment))
+end
+def make_modified_copy(src, replace_at, replace_with):
+  replace_at_type = yamlfragment_type(src)
+  if replace_at_type == "dict":
+    return make_modified_copy_map(src, replace_at, replace_with)
+  elif replace_at_type == "list":
+    return make_modified_copy_array(src, replace_at, replace_with)
+  else:
+    # starskylark does not support exceptions
+    fail("Unsupported type " + replace_at_type)
+  end
+end
+
 # FIXME: Violates the DRY principle - thrice!
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,
 # appending all functions to each source file, to disuse load
-transforms = struct.make(make_modified_copy_map=make_modified_copy_map, make_modified_copy_array=make_modified_copy_array, dump=dump)
+transforms = struct.make(make_modified_copy_map=make_modified_copy_map, make_modified_copy_array=make_modified_copy_array, make_modified_copy=make_modified_copy, dump=dump)

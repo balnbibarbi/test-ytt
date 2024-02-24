@@ -3,7 +3,7 @@
 #@ def do_transform(input, _):
 #@   # print("Input:")
 #@   # dump(input)
-#@   ret = transforms.make_modified_copy_array(input, 1, "new_second_value")
+#@   ret = transforms.make_modified_copy(input, 1, "new_second_value")
 #@   return ret
 #@ end
 #@overlay/match by=overlay.all, expects="1+"
