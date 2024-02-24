@@ -1,9 +1,10 @@
 #@ load("transforms.star", "transforms")
 #@ load("@ytt:overlay", "overlay")
 #@ def do_transform(input, _):
+#@   ret = transforms.to_primitive(input)
 #@   # print("Input:")
 #@   # dump(input)
-#@   ret = transforms.make_modified_copy(input, 1, "new_second_value")
+#@   ret[1] = "new_second_value"
 #@   return ret
 #@ end
 #@overlay/match by=overlay.all, expects="1+"

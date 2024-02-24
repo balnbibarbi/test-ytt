@@ -3,7 +3,8 @@
 #@ def do_transform(input, _):
 #@   # print("Input:")
 #@   # dump(input)
-#@   ret = transforms.make_modified_copy(input, "somename", "newvalue")
+#@   ret = transforms.to_primitive(input)
+#@   ret["somename"] = "newvalue"
 #@   return ret
 #@ end
 #@overlay/match by=overlay.all, expects="1+"
