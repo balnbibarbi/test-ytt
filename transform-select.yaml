@@ -5,6 +5,7 @@
 #@   # transforms.dump(input)
 #@   input = transforms.to_primitive(input)
 #@   (index, object) = transforms.select(input, "colour", "red")
+#@   # transforms.dump(index, object)
 #@   return object
 #@ end
 #@overlay/match by=overlay.all, expects="1+"

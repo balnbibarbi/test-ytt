@@ -1,11 +1,16 @@
 load("@ytt:struct", "struct")
 load("@ytt:yaml", "yaml")
-def dump(thing):
+def dump_one(thing):
   if type(thing) == "yamlfragment":
     # yamlfragments serialise to useless strings
     thing = to_primitive(thing)
   end
   print(thing)
+end
+def dump(*things):
+  for thing in things:
+    dump_one(thing)
+  end
 end
 # Found at: https://github.com/carvel-dev/ytt/issues/20
 def to_primitive(yaml_fragment):
