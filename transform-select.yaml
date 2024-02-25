@@ -4,7 +4,7 @@
 #@   # print("Input:")
 #@   # transforms.dump(input)
 #@   input = transforms.to_primitive(input)
-#@   (index, object) = transforms.select(input, "colour", "red")
+#@   (index, object) = transforms.select(input, colour="red", shape="circle")
 #@   # transforms.dump(index, object)
 #@   return object
 #@ end
