@@ -2,9 +2,9 @@
 #@ load("@ytt:overlay", "overlay")
 #@ def do_transform(input, _):
 #@   # print("Input:")
-#@   # dump(input)
+#@   # transforms.dump(input)
 #@   ret = transforms.to_primitive(input)
-#@   ret["somename"] = "newvalue"
+#@   ret["some_name"] = "some_new_value"
 #@   return ret
 #@ end
 #@overlay/match by=overlay.all, expects="1+"
