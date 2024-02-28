@@ -12,6 +12,8 @@ def dump(*things):
     dump_one(thing)
   end
 end
+# This converts a yamlfragment instance into a Starlark primitive value.
+# This is required because unlike primitives, yamlfragments aren't mutable.
 # Found at: https://github.com/carvel-dev/ytt/issues/20
 def to_primitive(yaml_fragment):
   return yaml.decode(yaml.encode(yaml_fragment))
@@ -28,8 +30,8 @@ def has_attrs(object, attrs):
   end
   return True
 end
-# Find the array item that has an attribute of the given name
-# whose value is the given value.
+# Find the first element in the given array that has all of the given
+# attribute names and values.
 # Return a tuple of (element_index, element_value) if found,
 # or (None, None) if no matching element was found.
 def select(array, **attrs):
@@ -40,6 +42,20 @@ def select(array, **attrs):
     end
   end
   return (None, None)
+end
+# Find all elements in the given array that have all of the given
+# attribute names and values.
+# Return a tuple of tuples of (element_index, element_value),
+# or an empty tuple if no matching elements were found.
+def select_all(array, **attrs):
+  ret = []
+  for index in range(len(array)):
+    element = array[index]
+    if has_attrs(element, attrs):
+      ret += (index, element)
+    end
+  end
+  return tuple(ret)
 end
 # FIXME: Violates the DRY principle - thrice!
 # Seems no way to import * in ytt

@@ -6,7 +6,8 @@
 #@   input = transforms.to_primitive(input)
 #@   (index, object) = transforms.select(input, colour="red", shape="circle")
 #@   # transforms.dump(index, object)
-#@   return object
+#@   object["is_matching"] = "yes"
+#@   return input
 #@ end
 #@overlay/match by=overlay.all, expects="1+"
 #@overlay/replace via=do_transform
