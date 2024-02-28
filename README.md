@@ -1,6 +1,6 @@
 # YTT Playground
 
-This is an example of processing YAML data using the Python-like "Skylark" language embedded within YTT, instead of directly in YTT itself.
+This is an example of processing YAML data using the Python-like "Starlark" language embedded within YTT, instead of directly in YTT itself.
 
 The only YTT in this project is that which is required in order to take the entire YAML input to YTT,
 pass it to Starlark for processing, and then use the Starlark code's output as the output of the YTT.
