@@ -1,0 +1,20 @@
+-- this object: doesn't match
+-  because it doesn't have: any of the right attributes
+-- this object: also doesn't match
+-  because it has the required attributes: but one value is wrong
+-  colour: green
+-  shape: circle
+-- this object: also doesn't match
+-  because it has the required attributes: but both values are wrong
+-  colour: green
+-  shape: square
+-- this object: matches
+-  because it has: all of the required attributes
+-  colour: red
+-  shape: circle
+-  is_matching: "yes"
+-- this object: also doesn't match
+-  because it has the required value: but the attribute name is wrong
+-  not_colour: red
+-  shape: circle
+-- this object: also doesn't match
