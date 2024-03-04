@@ -7,10 +7,26 @@ def dump_one(thing):
   end
   print(thing)
 end
-def dump(*things):
+def map(func, *things):
+  results = []
   for thing in things:
-    dump_one(thing)
+    result = func(thing)
+    results.append(result)
   end
+  return results
+end
+def filter(func, *things):
+  results = []
+  for thing in things:
+    result = func(thing)
+    if result:
+      results.append(thing)
+    end
+  end
+  return results
+end
+def dump(*things):
+  map(dump_one, *things)
 end
 # This converts a yamlfragment instance into a Starlark primitive value.
 # This is required because unlike primitives, yamlfragments aren't mutable.
@@ -61,4 +77,4 @@ end
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,
 # appending all functions to each source file, to disuse load
-transforms = struct.make(to_primitive=to_primitive, select=select, dump=dump)
+transforms = struct.make(to_primitive=to_primitive, select=select, dump=dump, dump_one=dump_one, map=map, filter=filter)
