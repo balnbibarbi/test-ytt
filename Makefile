@@ -13,6 +13,6 @@ all:
 			echo "PASS: $${case}" 2>&1 ; \
 		else \
 			echo "FAIL: $${case}" 2>&1 ; \
-			diff -Naurb "$${case}/actual-output.yaml" "$${case}/expected-output.yaml" 2>&1 ; \
+			diff -Naurb "$${case}/expected-output.yaml" "$${case}/actual-output.yaml" 2>&1 ; \
 		fi ; \
 	done
