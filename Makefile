@@ -1,4 +1,5 @@
-LIBRARY=transforms.star
+LIBRARIES=$(wildcard *.star)
+LIB_FLAGS=$(addprefix -f,$(LIBRARIES))
 # Case 1: transform a map/dict/object
 # Case 2: transform an array/list
 # Case 3: select an array entry by attribute value
@@ -8,7 +9,7 @@ TEST_CASES=$(wildcard tests/*)
 all:
 	@set -e ; \
 	for case in $(TEST_CASES) ; do \
-		ytt -f "$${case}/input.yaml" -f "$(LIBRARY)" -f "$${case}/transform.yaml" > "$${case}/actual-output.yaml" ; \
+		ytt -f "$${case}/input.yaml" $(LIB_FLAGS) -f "$${case}/transform.yaml" > "$${case}/actual-output.yaml" ; \
 		if cmp "$${case}/actual-output.yaml" "$${case}/expected-output.yaml" ; then \
 			echo "PASS: $${case}" 2>&1 ; \
 		else \

@@ -1,9 +1,10 @@
 #@ load("transforms.star", "transforms")
 #@ load("@ytt:overlay", "overlay")
+#@ load("dump.star", "dump")
 #@ def do_transform(input, _):
 #@   # print("Input:")
-#@   # transforms.dump(input)
-#@   ret = transforms.to_primitive(input)
+#@   # dump.dump(input)
+#@   ret = dump.to_primitive(input)
 #@   ret["some_name"] = "some_new_value"
 #@   return ret
 #@ end

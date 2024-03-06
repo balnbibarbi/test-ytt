@@ -1,20 +1,6 @@
 load("@ytt:struct", "struct")
 load("@ytt:yaml", "yaml")
-def dump_one(thing):
-  if type(thing) == "yamlfragment":
-    # yamlfragments serialise to useless strings
-    thing = to_primitive(thing)
-  elif type(thing) == "struct":
-    # structs also serialise to useless strings
-    thing = "struct<" + repr(dir(thing)) + ">"
-  end
-  print(thing)
-end
-def dump(*things):
-  for thing in things:
-    dump_one(thing)
-  end
-end
+load("dump.star", dump="dump")
 def _compose(func1, func2):
   def _composed(*args, **kwargs):
     return func1(func2(*args, **kwargs))
@@ -206,12 +192,6 @@ end
 def allnot(things, filter_func, *args, **kwargs):
   return not any(things, filter_func, *args, **kwargs)
 end
-# This converts a yamlfragment instance into a Starlark primitive value.
-# This is required because unlike primitives, yamlfragments aren't mutable.
-# Found at: https://github.com/carvel-dev/ytt/issues/20
-def to_primitive(yaml_fragment):
-  return yaml.decode(yaml.encode(yaml_fragment))
-end
 # Test whether the given object has all of the given
 # attributes, with the given values.
 def _object_has_attrs(object, attrs):
@@ -233,4 +213,4 @@ end
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,
 # appending all functions to each source file, to disuse load
-transforms = struct.make(to_primitive=to_primitive, dump=dump, dump_one=dump_one, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=select_by_attrs)
+transforms = struct.make(first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=select_by_attrs)
