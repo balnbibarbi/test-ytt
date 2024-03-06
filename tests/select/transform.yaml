@@ -2,11 +2,17 @@
 #@ load("@ytt:overlay", "overlay")
 #@ def do_transform(input, _):
 #@   # print("Input:")
-#@   # transforms.dump(input)
 #@   input = transforms.to_primitive(input)
-#@   (index, object) = transforms.select(input, colour="red", shape="circle")
-#@   # transforms.dump(index, object)
-#@   object["is_matching"] = "yes"
+#@   # transforms.dump(input)
+#@   matching_objects = transforms.select_by_attrs(input, colour="red", shape="circle")
+#@   # transforms.dump(matching_objects)
+#@   matching_objects[0]["is_matching"] = "yes"
+#@   integers = [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+#@   transforms.dump("Integers:", integers)
+#@   squares = transforms.map(integers, lambda x: x * x )
+#@   transforms.dump("Squares:", squares)
+#@   even_squares = transforms.select(squares, lambda x: (x % 2) == 0 )
+#@   transforms.dump("Even squares:", even_squares)
 #@   return input
 #@ end
 #@overlay/match by=overlay.all, expects="1+"
