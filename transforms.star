@@ -59,13 +59,26 @@ def _make_count_step(next_step):
   step = struct.make(receive_item=_receive, count=_get_count)
   return step
 end
-def _make_filter_step(next_step, filter_func):
+def _make_filter_step(next_step, filter_func, stop_on_success=False, stop_on_failure=False):
   def _receive(thing, *args, **kwargs):
     filter_success = filter_func(thing, *args, **kwargs)
     if filter_success:
-      return next_step.receive_item(thing, *args, **kwargs)
+      # Filter succeeded. Call next step.
+      next_step_ret = next_step.receive_item(thing, *args, **kwargs)
+      if stop_on_success:
+        ret = False # Stop on first success
+      else:
+        ret = next_step_ret # Propagate next step's continue-iteration flag
+      end
+    else:
+      # Filter failed. Don't call next step.
+      if stop_on_failure:
+        ret = False # Stop on first failure
+      else:
+        ret = True # Continue iterating
+      end
     end
-    return False  # Stop iterating
+    return ret
   end
   step = struct.make(receive_item=_receive)
   return step
@@ -111,7 +124,8 @@ def first(things, filter_func, *args, **kwargs):
   remember_last = _make_remember_last_step(
     _make_filter_step(
       _make_null_step(),
-      filter_func
+      filter_func,
+      stop_on_success=True
     )
   )
   pipeline = _make_stop_step(remember_last)
@@ -133,7 +147,9 @@ def select(things, filter_func, *args, **kwargs):
         _make_null_step(),
         subset
       ),
-      filter_func
+      filter_func,
+      stop_on_success=False,
+      stop_on_failure=False
     )
   )
   ret = _iterate(things, pipeline, *args, **kwargs)
@@ -167,7 +183,8 @@ def all(things, filter_func, *args, **kwargs):
   )
   filter_step = _make_filter_step(
     pre_filter_counter,
-    filter_func
+    filter_func,
+    stop_on_failure=True
   )
   post_filter_counter = _make_count_step(
     filter_step
@@ -178,15 +195,15 @@ end
 # Does any member have the given predicate?
 def any(things, filter_func, *args, **kwargs):
   post_filter_counter = _make_count_step(
-    _make_stop_step(
-      _make_filter_step(
-        _make_null_step(),
-        filter_func
-      )
-    )
+    _make_null_step()
   )
-  ret = _iterate(things, post_filter_counter, *args, **kwargs)
-  return post_filter_counter.count != 0;
+  pipeline = _make_filter_step(
+    post_filter_counter,
+    filter_func,
+    stop_on_success=True
+  )
+  ret = _iterate(things, pipeline, *args, **kwargs)
+  return post_filter_counter.count() != 0;
 end
 # Do no members have the given predicate?
 def allnot(things, filter_func, *args, **kwargs):
