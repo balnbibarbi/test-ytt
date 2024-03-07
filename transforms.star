@@ -144,10 +144,6 @@ def _object_has_attrs(object, attrs):
   end
   return all(attrs, _attr_ison_object, object)
 end
-def select_by_attrs(things, **attrs):
-  collection = new_collection(things)
-  return collection.select(_object_has_attrs, attrs)
-end
 def new_collection(things):
   this = None
   def _iterable():
@@ -254,8 +250,8 @@ def new_collection(things):
   def allnot(filter_func, *args, **kwargs):
     return not this.any(filter_func, *args, **kwargs)
   end
-  def _select_by_attrs(*args, **kwargs):
-    return select_by_attrs(this.things, *args, **kwargs)
+  def select_by_attrs(**attrs):
+    return this.select(_object_has_attrs, attrs)
   end
   def _iterate(step, *args, **kwargs):
     # FIXME: Need a distinction between stopping a pipeline run for an object,
@@ -272,7 +268,7 @@ def new_collection(things):
     return "Collection<" + repr(things) + ">"
   end
   this = struct.make(
-    tostr=tostr, things=things, iterable=_iterable, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=_select_by_attrs, iterate=_iterate
+    tostr=tostr, things=things, iterable=_iterable, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=select_by_attrs, iterate=_iterate
   )
   return this
 end
@@ -280,4 +276,4 @@ end
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,
 # appending all functions to each source file, to disuse load
-transforms = struct.make(first=first, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=select_by_attrs, new_collection=new_collection)
+transforms = struct.make(first=first, foreach=foreach, all=all, any=any, allnot=allnot, new_collection=new_collection)
