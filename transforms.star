@@ -10,16 +10,25 @@ end
 def _(*args):
   return args
 end
-def _make_step(receive_func, **extra_params):
-  return struct.make(receive_item=receive_func, **extra_params)
+def _make_step(receive_func, tostr_func, **extra_params):
+  def tostr():
+    return "Step<" + repr(receive_func) + ">"
+  end
+  return struct.make(receive_item=receive_func, tostr=tostr_func, **extra_params)
 end
 def _make_null_step():
+  def tostr():
+    return "NullStep<>"
+  end
   def _receive(thing, *args, **kwargs):
     return True
   end
-  return _make_step(_receive)
+  return _make_step(_receive, tostr)
 end
 def _make_transform_step(next_step, transform_func, *transform_args, **transform_kwargs):
+  def tostr():
+    return "TransformStep<" + repr(transform_func) + ">"
+  end
   def _receive(thing, *args, **kwargs):
     return next_step.receive_item(
       transform_func(
@@ -31,9 +40,12 @@ def _make_transform_step(next_step, transform_func, *transform_args, **transform
       **kwargs
     )
   end
-  return _make_step(_receive, transform_args=transform_args, transform_kwargs=transform_kwargs)
+  return _make_step(_receive, tostr, transform_args=transform_args, transform_kwargs=transform_kwargs)
 end
 def _make_count_step(next_step):
+  def tostr():
+    return "CountStep<>"
+  end
   count = [ 0 ]
   def _receive(thing, *args, **kwargs):
     count[0] += 1
@@ -42,9 +54,12 @@ def _make_count_step(next_step):
   def _get_count():
     return count[0]
   end
-  return _make_step(_receive, count=_get_count)
+  return _make_step(_receive, tostr, count=_get_count)
 end
 def _make_filter_step(next_step, filter_func, stop_on_success=False, stop_on_failure=False):
+  def tostr():
+    return "FilterStep<" + repr(filter_func) + ">"
+  end
   def _receive(thing, *args, **kwargs):
     filter_success = filter_func(thing, *args, **kwargs)
     if filter_success:
@@ -65,9 +80,12 @@ def _make_filter_step(next_step, filter_func, stop_on_success=False, stop_on_fai
     end
     return ret
   end
-  return _make_step(_receive)
+  return _make_step(_receive, tostr)
 end
 def _make_collect_input_step(next_step, collection):
+  def tostr():
+    return "CollectStep<" + repr(collection) + ">"
+  end
   def _receive(thing, *args, **kwargs):
     collection.append(thing)
     return next_step.receive_item(thing, *args, **kwargs)
@@ -75,9 +93,12 @@ def _make_collect_input_step(next_step, collection):
   def _get_collection():
     return collection
   end
-  return _make_step(_receive, collection=_get_collection)
+  return _make_step(_receive, tostr, collection=_get_collection)
 end
 def _make_remember_last_step(next_step):
+  def tostr():
+    return "RememberLastStep<>"
+  end
   last_seen = [ None ]
   def _receive(thing, *args, **kwargs):
     last_seen[0] = thing
@@ -86,20 +107,12 @@ def _make_remember_last_step(next_step):
   def _get_last_seen():
     return last_seen[0]
   end
-  return _make_step(_receive, last_seen=_get_last_seen)
+  return _make_step(_receive, tostr, last_seen=_get_last_seen)
 end
 # Collection operations
 def first(things, filter_func, *args, **kwargs):
   collection = new_collection(things)
   return collection.first(filter_func, *args, **kwargs)
-end
-def select(things, filter_func, *args, **kwargs):
-  collection = new_collection(things)
-  return collection.select(filter_func, *args, **kwargs)
-end
-def map(things, transform_func, *args, **kwargs):
-  collection = new_collection(things)
-  return collection.map(transform_func, *args, **kwargs)
 end
 def foreach(things, func, *args, **kwargs):
   collection = new_collection(things)
@@ -195,7 +208,7 @@ def new_collection(things):
       transform_func
     )
     ret = this.iterate(pipeline, *args, **kwargs)
-    return destination
+    return new_collection(destination)
   end
   # Pass each member of the collection to a function,
   # without keeping the results of the called function.
@@ -256,8 +269,11 @@ def new_collection(things):
       keep_iterating = step.receive_item(thing, *args, **kwargs)
     end
   end
+  def tostr():
+    return "Collection<" + repr(things) + ">"
+  end
   this = struct.make(
-    things=things, iterable=_iterable, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=_select_by_attrs, iterate=_iterate
+    tostr=tostr, things=things, iterable=_iterable, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=_select_by_attrs, iterate=_iterate
   )
   return this
 end
@@ -265,4 +281,4 @@ end
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,
 # appending all functions to each source file, to disuse load
-transforms = struct.make(first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=select_by_attrs, new_collection=new_collection)
+transforms = struct.make(first=first, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=select_by_attrs, new_collection=new_collection)
