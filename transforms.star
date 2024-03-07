@@ -217,8 +217,7 @@ def new_collection(things):
       _make_null_step(),
       func
     )
-    collection = new_collection(this.things)
-    ret = collection.iterate(pipeline, *args, **kwargs)
+    ret = this.iterate(pipeline, *args, **kwargs)
     return None
   end
   # Does every member have the given predicate?
