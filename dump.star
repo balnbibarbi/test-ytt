@@ -12,7 +12,11 @@ def _dump_one(thing):
     thing = to_primitive(thing)
   elif type(thing) == "struct":
     # structs also serialise to useless strings
-    thing = "struct<" + repr(dir(thing)) + ">"
+    if "tostr" in thing and type(thing["tostr"]) == "function":
+      thing = thing.tostr()
+    else:
+      thing = "struct<" + repr(dir(thing)) + ">"
+    end
   end
   print(thing)
 end
