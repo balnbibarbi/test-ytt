@@ -89,102 +89,33 @@ def _make_remember_last_step(next_step):
   return _make_step(_receive, last_seen=_get_last_seen)
 end
 # Collection operations
-# First member of collection that has given predicate, or None
 def first(things, filter_func, *args, **kwargs):
-  remember_last = _make_remember_last_step(
-    _make_null_step()
-  )
-  pipeline = _make_filter_step(
-    remember_last,
-    filter_func,
-    stop_on_success=True,
-    stop_on_failure=False
-  )
   collection = new_collection(things)
-  ret = collection.iterate(pipeline, *args, **kwargs)
-  return remember_last.last_seen()
+  return collection.first(filter_func, *args, **kwargs)
 end
-# Sub-collection of collection whose members have given predicate
 def select(things, filter_func, *args, **kwargs):
-  if type(things) == "list":
-    subset = []
-  elif type(things) == "dict":
-    subset = {}
-  else:
-    subset = {}
-  end
-  pipeline = _make_filter_step(
-    _make_collect_input_step(
-      _make_null_step(),
-      subset
-    ),
-    filter_func,
-    stop_on_success=False,
-    stop_on_failure=False
-  )
   collection = new_collection(things)
-  ret = collection.iterate(pipeline, *args, **kwargs)
-  return subset
+  return collection.select(filter_func, *args, **kwargs)
 end
-# Convert collection to another collection via a transformer function
 def map(things, transform_func, *args, **kwargs):
-  destination = []
-  pipeline = _make_transform_step(
-    _make_collect_input_step(
-      _make_null_step(),
-      destination
-    ),
-    transform_func
-  )
   collection = new_collection(things)
-  ret = collection.iterate(pipeline, *args, **kwargs)
-  return destination
+  return collection.map(transform_func, *args, **kwargs)
 end
-# Pass each member of the collection to a function,
-# without keeping the results of the called function.
 def foreach(things, func, *args, **kwargs):
-  pipeline = _make_transform_step(
-    _make_null_step(),
-    func
-  )
   collection = new_collection(things)
-  ret = collection.iterate(pipeline, *args, **kwargs)
+  return collection.foreach(func, *args, **kwargs)
 end
-# Does every member have the given predicate?
 def all(things, filter_func, *args, **kwargs):
-  post_filter_counter = _make_count_step(
-    _make_null_step()
-  )
-  pre_filter_counter = _make_count_step(
-    _make_filter_step(
-        post_filter_counter,
-        filter_func,
-        stop_on_success=False,
-        stop_on_failure=True
-      )
-  )
   collection = new_collection(things)
-  ret = collection.iterate(pre_filter_counter, *args, **kwargs)
-  return post_filter_counter.count() == pre_filter_counter.count();
+  return collection.all(filter_func, *args, **kwargs)
 end
-# Does any member have the given predicate?
 def any(things, filter_func, *args, **kwargs):
-  post_filter_counter = _make_count_step(
-    _make_null_step()
-  )
-  pipeline = _make_filter_step(
-    post_filter_counter,
-    filter_func,
-    stop_on_success=True,
-    stop_on_failure=False
-  )
   collection = new_collection(things)
-  ret = collection.iterate(pipeline, *args, **kwargs)
-  return post_filter_counter.count() != 0;
+  return collection.any(filter_func, *args, **kwargs)
 end
-# Do no members have the given predicate?
 def allnot(things, filter_func, *args, **kwargs):
-  return not any(things, filter_func, *args, **kwargs)
+  collection = new_collection(things)
+  return collection.allnot(filter_func, *args, **kwargs)
 end
 # Test whether the given object has all of the given
 # attributes, with the given values.
@@ -200,8 +131,9 @@ def _object_has_attrs(object, attrs):
   end
   return all(attrs, _attr_ison_object, object)
 end
-def select_by_attrs(objects, **attrs):
-  return select(objects, _object_has_attrs, attrs)
+def select_by_attrs(things, **attrs):
+  collection = new_collection(things)
+  return collection.select(_object_has_attrs, attrs)
 end
 def new_collection(things):
   this = None
@@ -217,26 +149,98 @@ def new_collection(things):
     end
     return iterable
   end
-  def _first(*args, **kwargs):
-    return first(this.things, *args, **kwargs)
+  # First member of collection that has given predicate, or None
+  def first(filter_func, *args, **kwargs):
+    remember_last = _make_remember_last_step(
+      _make_null_step()
+    )
+    pipeline = _make_filter_step(
+      remember_last,
+      filter_func,
+      stop_on_success=True,
+      stop_on_failure=False
+    )
+    ret = this.iterate(pipeline, *args, **kwargs)
+    return remember_last.last_seen()
   end
-  def _select(*args, **kwargs):
-    return select(this.things, *args, **kwargs)
+  # Sub-collection of collection whose members have given predicate
+  def select(filter_func, *args, **kwargs):
+    if type(this.things) == "list":
+      subset = []
+    elif type(this.things) == "dict":
+      subset = {}
+    else:
+      subset = {}
+    end
+    pipeline = _make_filter_step(
+      _make_collect_input_step(
+        _make_null_step(),
+        subset
+      ),
+      filter_func,
+      stop_on_success=False,
+      stop_on_failure=False
+    )
+    ret = this.iterate(pipeline, *args, **kwargs)
+    return subset
   end
-  def _map(*args, **kwargs):
-    return map(this.things, *args, **kwargs)
+  # Convert collection to another collection via a transformer function
+  def map(transform_func, *args, **kwargs):
+    destination = []
+    pipeline = _make_transform_step(
+      _make_collect_input_step(
+        _make_null_step(),
+        destination
+      ),
+      transform_func
+    )
+    ret = this.iterate(pipeline, *args, **kwargs)
+    return destination
   end
-  def _foreach(*args, **kwargs):
-    return foreach(this.things, *args, **kwargs)
+  # Pass each member of the collection to a function,
+  # without keeping the results of the called function.
+  def foreach(func, *args, **kwargs):
+    pipeline = _make_transform_step(
+      _make_null_step(),
+      func
+    )
+    collection = new_collection(this.things)
+    ret = collection.iterate(pipeline, *args, **kwargs)
+    return None
   end
-  def _all(*args, **kwargs):
-    return all(this.things, *args, **kwargs)
+  # Does every member have the given predicate?
+  def all(filter_func, *args, **kwargs):
+    post_filter_counter = _make_count_step(
+      _make_null_step()
+    )
+    pre_filter_counter = _make_count_step(
+      _make_filter_step(
+          post_filter_counter,
+          filter_func,
+          stop_on_success=False,
+          stop_on_failure=True
+        )
+    )
+    ret = this.iterate(pre_filter_counter, *args, **kwargs)
+    return post_filter_counter.count() == pre_filter_counter.count();
   end
-  def _any(*args, **kwargs):
-    return any(this.things, *args, **kwargs)
+  # Does any member have the given predicate?
+  def any(filter_func, *args, **kwargs):
+    post_filter_counter = _make_count_step(
+      _make_null_step()
+    )
+    pipeline = _make_filter_step(
+      post_filter_counter,
+      filter_func,
+      stop_on_success=True,
+      stop_on_failure=False
+    )
+    ret = this.iterate(pipeline, *args, **kwargs)
+    return post_filter_counter.count() != 0;
   end
-  def _allnot(*args, **kwargs):
-    return allnot(this.things, *args, **kwargs)
+  # Do no members have the given predicate?
+  def allnot(filter_func, *args, **kwargs):
+    return not this.any(filter_func, *args, **kwargs)
   end
   def _select_by_attrs(*args, **kwargs):
     return select_by_attrs(this.things, *args, **kwargs)
@@ -253,7 +257,7 @@ def new_collection(things):
     end
   end
   this = struct.make(
-    things=things, iterable=_iterable, first=_first, select=_select, map=_map, foreach=_foreach, all=_all, any=_any, allnot=_allnot, select_by_attrs=_select_by_attrs, iterate=_iterate
+    things=things, iterable=_iterable, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=_select_by_attrs, iterate=_iterate
   )
   return this
 end
