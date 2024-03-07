@@ -14,9 +14,14 @@
 #@   dump.dump("Squares:", squares)
 #@   even_squares = transforms.select(squares, lambda x: (x % 2) == 0 )
 #@   dump.dump("Even squares:", even_squares)
-#@   dump.dump("Any equal to 36?", transforms.any(even_squares, lambda x: x == 36 ))
-#@   dump.dump("All even?", transforms.all(even_squares, lambda x: (x % 2) == 0 ))
-#@   dump.dump("Any equal to 17?", transforms.any(even_squares, lambda x: x == 17 ))
+#@   dump.dump("All even squares even?", transforms.all(even_squares, lambda x: (x % 2) == 0 ))
+#@   dump.dump("All even squares not odd?", transforms.allnot(even_squares, lambda x: (x % 2) != 0 ))
+#@   dump.dump("Any even square even?", transforms.any(even_squares, lambda x: (x % 2) == 0 ))
+#@   dump.dump("Any even square odd?", transforms.any(even_squares, lambda x: (x % 2) != 0 ))
+#@   dump.dump("Any even square equal to 17?", transforms.any(even_squares, lambda x: x == 17 ))
+#@   dump.dump("Any even square not equal to 17?", transforms.any(even_squares, lambda x: x != 17 ))
+#@   dump.dump("Any even square equal to 36?", transforms.any(even_squares, lambda x: x == 36 ))
+#@   dump.dump("Any even square not equal to 36?", transforms.any(even_squares, lambda x: x != 36 ))
 #@   return input
 #@ end
 #@overlay/match by=overlay.all, expects="1+"

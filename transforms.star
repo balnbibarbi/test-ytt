@@ -17,15 +17,20 @@ def _make_null_step():
   step = struct.make(receive_item=_receive)
   return step
 end
-def _iterate(things, step, *args, **kwargs):
-  if type(things) == "list":
-    iterable = things
-  elif type(things) == "dict":
-    iterable = things.items()
+def _iterable(collection):
+  if type(collection) == "list":
+    iterable = collection
+  elif type(collection) == "dict":
+    iterable = collection.items()
   else:
-    iterable = things
+    iterable = collection
   end
-  for thing in iterable:
+  return iterable
+end
+def _iterate(collection, step, *args, **kwargs):
+  for thing in _iterable(collection):
+    # FIXME: Need a distinction between stopping a pipeline run for an object,
+    # and stopping further pipeline runs for successive objects.
     keep_iterating = step.receive_item(thing, *args, **kwargs)
     if not keep_iterating:
       break
@@ -83,30 +88,15 @@ def _make_filter_step(next_step, filter_func, stop_on_success=False, stop_on_fai
   step = struct.make(receive_item=_receive)
   return step
 end
-def _make_stop_step(next_step):
-  def _receive(thing, *args, **kwargs):
-    # Ignore return value
-    next_step.receive_item(thing, *args, **kwargs)
-    return False
-  end
-  step = struct.make(receive_item=_receive)
-  return step
-end
-def _make_continue_step(next_step):
-  def _receive(thing, *args, **kwargs):
-    # Ignore return value
-    next_step.receive_item(thing, *args, **kwargs)
-    return True
-  end
-  step = struct.make(receive_item=_receive)
-  return step
-end
 def _make_collect_input_step(next_step, collection):
   def _receive(thing, *args, **kwargs):
     collection.append(thing)
     return next_step.receive_item(thing, *args, **kwargs)
   end
-  step = struct.make(receive_item=_receive)
+  def _get_collection():
+    return collection
+  end
+  step = struct.make(receive_item=_receive, collection=_get_collection)
   return step
 end
 def _make_remember_last_step(next_step):
@@ -115,22 +105,26 @@ def _make_remember_last_step(next_step):
     last_seen = thing
     return next_step.receive_item(thing, *args, **kwargs)
   end
-  step = struct.make(receive_item=_receive, last_seen=last_seen)
+  def _get_last_seen():
+    return last_seen
+  end
+  step = struct.make(receive_item=_receive, last_seen=_get_last_seen)
   return step
 end
 # Collection operations
 # First member of collection that has given predicate, or None
 def first(things, filter_func, *args, **kwargs):
   remember_last = _make_remember_last_step(
-    _make_filter_step(
-      _make_null_step(),
-      filter_func,
-      stop_on_success=True
-    )
+    _make_null_step()
   )
-  pipeline = _make_stop_step(remember_last)
+  pipeline = _make_filter_step(
+    remember_last,
+    filter_func,
+    stop_on_success=True,
+    stop_on_failure=False
+  )
   ret = _iterate(things, pipeline, *args, **kwargs)
-  return remember_last.last_seen
+  return remember_last.last_seen()
 end
 # Sub-collection of collection whose members have given predicate
 def select(things, filter_func, *args, **kwargs):
@@ -141,16 +135,14 @@ def select(things, filter_func, *args, **kwargs):
   else:
     subset = {}
   end
-  pipeline = _make_continue_step(
-    _make_filter_step(
-      _make_collect_input_step(
-        _make_null_step(),
-        subset
-      ),
-      filter_func,
-      stop_on_success=False,
-      stop_on_failure=False
-    )
+  pipeline = _make_filter_step(
+    _make_collect_input_step(
+      _make_null_step(),
+      subset
+    ),
+    filter_func,
+    stop_on_success=False,
+    stop_on_failure=False
   )
   ret = _iterate(things, pipeline, *args, **kwargs)
   return subset
@@ -171,26 +163,27 @@ end
 # Pass each member of the collection to a function,
 # without keeping the results of the called function.
 def foreach(collection, func, *args, **kwargs):
-  pipeline = _make_continue_step(
-    _make_null_step()
+  pipeline = _make_transform_step(
+    _make_null_step(),
+    func
   )
   ret = _iterate(collection, pipeline, *args, **kwargs)
 end
 # Does every member have the given predicate?
 def all(things, filter_func, *args, **kwargs):
-  pre_filter_counter = _make_count_step(
+  post_filter_counter = _make_count_step(
     _make_null_step()
   )
-  filter_step = _make_filter_step(
-    pre_filter_counter,
-    filter_func,
-    stop_on_failure=True
+  pre_filter_counter = _make_count_step(
+    _make_filter_step(
+        post_filter_counter,
+        filter_func,
+        stop_on_success=False,
+        stop_on_failure=True
+      )
   )
-  post_filter_counter = _make_count_step(
-    filter_step
-  )
-  ret = _iterate(things, post_filter_counter, *args, **kwargs)
-  return pre_filter_counter.count() == post_filter_counter.count();
+  ret = _iterate(things, pre_filter_counter, *args, **kwargs)
+  return post_filter_counter.count() == pre_filter_counter.count();
 end
 # Does any member have the given predicate?
 def any(things, filter_func, *args, **kwargs):
@@ -200,7 +193,8 @@ def any(things, filter_func, *args, **kwargs):
   pipeline = _make_filter_step(
     post_filter_counter,
     filter_func,
-    stop_on_success=True
+    stop_on_success=True,
+    stop_on_failure=False
   )
   ret = _iterate(things, pipeline, *args, **kwargs)
   return post_filter_counter.count() != 0;
