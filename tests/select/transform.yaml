@@ -2,29 +2,28 @@
 #@ load("transforms.star", "transforms")
 #@ load("dump.star", "dump")
 #@ def do_transform(input, _):
-#@   # print("Input:")
-#@   input = dump.to_primitive(input)
-#@   # dump.dump(input)
-#@   matching_objects = transforms.new_collection(input).select_by_attrs(colour="red", shape="circle")
-#@   # dump.dump(matching_objects)
-#@   matching_objects[0]["is_matching"] = "yes"
+#@   # dump.dump("Input:", input)
+#@   collection = transforms.new_collection(input)
+#@   matching_object = collection.select(lambda x: transforms.has_attrs(x, colour="red", shape="circle")).first()
+#@   dump.dump("Matching object:", matching_object)
+#@   matching_object["is_matching"] = "yes"
 #@   integers = transforms.new_collection([ 1, 2, 3, 4, 5, 6, 7, 8, 9 ])
 #@   dump.dump("Integers:", integers)
 #@   squares = integers.map(lambda x: x * x )
 #@   dump.dump("Squares:", squares)
 #@   even_squares = squares.select(lambda x: (x % 2) == 0 )
 #@   dump.dump("Even squares:", even_squares)
-#@   dump.dump("All even squares even?", transforms.all(even_squares, lambda x: (x % 2) == 0 ))
-#@   dump.dump("All even squares not odd?", transforms.allnot(even_squares, lambda x: (x % 2) != 0 ))
-#@   dump.dump("Any even square even?", transforms.any(even_squares, lambda x: (x % 2) == 0 ))
-#@   dump.dump("Any even square odd?", transforms.any(even_squares, lambda x: (x % 2) != 0 ))
-#@   dump.dump("Any even square equal to 17?", transforms.any(even_squares, lambda x: x == 17 ))
-#@   dump.dump("First even square equal to 17", transforms.first(even_squares, lambda x: x == 17 ))
-#@   dump.dump("Any even square not equal to 17?", transforms.any(even_squares, lambda x: x != 17 ))
-#@   dump.dump("Any even square equal to 36?", transforms.any(even_squares, lambda x: x == 36 ))
-#@   dump.dump("First even square equal to 36", transforms.first(even_squares, lambda x: x == 36 ))
-#@   dump.dump("Any even square not equal to 36?", transforms.any(even_squares, lambda x: x != 36 ))
-#@   return input
+#@   dump.dump("All even squares even?", even_squares.all(lambda x: (x % 2) == 0 ))
+#@   dump.dump("All even squares not odd?", even_squares.allnot(lambda x: (x % 2) != 0 ))
+#@   dump.dump("Any even square even?", even_squares.any(lambda x: (x % 2) == 0 ))
+#@   dump.dump("Any even square odd?", even_squares.any(lambda x: (x % 2) != 0 ))
+#@   dump.dump("Any even square equal to 17?", even_squares.any(lambda x: x == 17 ))
+#@   dump.dump("First even square equal to 17", even_squares.first(lambda x: x == 17 ))
+#@   dump.dump("Any even square not equal to 17?", even_squares.any(lambda x: x != 17 ))
+#@   dump.dump("Any even square equal to 36?", even_squares.any(lambda x: x == 36 ))
+#@   dump.dump("First even square equal to 36", even_squares.first(lambda x: x == 36 ))
+#@   dump.dump("Any even square not equal to 36?", even_squares.any(lambda x: x != 36 ))
+#@   return collection.items
 #@ end
 #@overlay/match by=overlay.all, expects="1+"
 #@overlay/replace via=do_transform

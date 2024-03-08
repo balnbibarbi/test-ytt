@@ -87,7 +87,12 @@ def _make_collect_input_step(next_step, collection):
     return "CollectStep<" + repr(collection) + ">"
   end
   def _receive(thing, *args, **kwargs):
-    collection.append(thing)
+    if type(collection) == "list":
+      collection.append(thing)
+    else:
+      (name, value) = thing
+      collection[name] = value
+    end
     return next_step.receive_item(thing, *args, **kwargs)
   end
   def _get_collection():
@@ -109,57 +114,24 @@ def _make_remember_last_step(next_step):
   end
   return _make_step(_receive, tostr, last_seen=_get_last_seen)
 end
-# Collection operations
-def first(things, filter_func, *args, **kwargs):
-  collection = new_collection(things)
-  return collection.first(filter_func, *args, **kwargs)
-end
-def foreach(things, func, *args, **kwargs):
-  collection = new_collection(things)
-  return collection.foreach(func, *args, **kwargs)
-end
-def all(things, filter_func, *args, **kwargs):
-  collection = new_collection(things)
-  return collection.all(filter_func, *args, **kwargs)
-end
-def any(things, filter_func, *args, **kwargs):
-  collection = new_collection(things)
-  return collection.any(filter_func, *args, **kwargs)
-end
-def allnot(things, filter_func, *args, **kwargs):
-  collection = new_collection(things)
-  return collection.allnot(filter_func, *args, **kwargs)
-end
-# Test whether the given object has all of the given
-# attributes, with the given values.
-def _object_has_attrs(object, attrs):
-  def _attr_ison_object(attr, object):
-    (attr_name, attr_value) = attr
-    if attr_name not in object:
-      return False
-    elif object[attr_name] != attr_value:
-      return False
-    end
-    return True
-  end
-  return all(attrs, _attr_ison_object, object)
-end
+# Collection class
 def new_collection(things):
   this = None
-  def _iterable():
-    if type(this.things) == "yaml_fragment":
-      iterable = dump.to_primitive(this.things)
-    elif type(this.things) == "list":
-      iterable = this.things
-    elif type(this.things) == "dict":
-      iterable = this.things.items()
+  if type(things) == "yamlfragment":
+    things = dump.to_primitive(things)
+  end
+  def iterable():
+    if type(this.items) == "list":
+      iterable = this.items
+    elif type(this.items) == "dict":
+      iterable = this.items.items()
     else:
-      iterable = this.things
+      iterable = this.items
     end
     return iterable
   end
   # First member of collection that has given predicate, or None
-  def first(filter_func, *args, **kwargs):
+  def first(filter_func=_, *args, **kwargs):
     remember_last = _make_remember_last_step(
       _make_null_step()
     )
@@ -174,10 +146,8 @@ def new_collection(things):
   end
   # Sub-collection of collection whose members have given predicate
   def select(filter_func, *args, **kwargs):
-    if type(this.things) == "list":
+    if type(this.iterable()) == "list":
       subset = []
-    elif type(this.things) == "dict":
-      subset = {}
     else:
       subset = {}
     end
@@ -191,7 +161,7 @@ def new_collection(things):
       stop_on_failure=False
     )
     ret = this.iterate(pipeline, *args, **kwargs)
-    return subset
+    return new_collection(subset)
   end
   # Convert collection to another collection via a transformer function
   def map(transform_func, *args, **kwargs):
@@ -250,9 +220,6 @@ def new_collection(things):
   def allnot(filter_func, *args, **kwargs):
     return not this.any(filter_func, *args, **kwargs)
   end
-  def select_by_attrs(**attrs):
-    return this.select(_object_has_attrs, attrs)
-  end
   def _iterate(step, *args, **kwargs):
     # FIXME: Need a distinction between stopping a pipeline run for an object,
     # and stopping further pipeline runs for successive objects.
@@ -268,12 +235,27 @@ def new_collection(things):
     return "Collection<" + repr(things) + ">"
   end
   this = struct.make(
-    tostr=tostr, things=things, iterable=_iterable, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, select_by_attrs=select_by_attrs, iterate=_iterate
+    tostr=tostr, items=things, iterable=iterable, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, iterate=_iterate
   )
   return this
+end
+# Test whether the given object has all of the given
+# attributes, with the given values.
+def has_attrs(object, **attrs):
+  def _attr_ison_object(attr, object):
+    (attr_name, attr_value) = attr
+    if attr_name not in object:
+      return False
+    elif object[attr_name] != attr_value:
+      return False
+    end
+    return True
+  end
+  collection = new_collection(attrs)
+  return collection.all(_attr_ison_object, object)
 end
 # FIXME: Violates the DRY principle - thrice!
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,
 # appending all functions to each source file, to disuse load
-transforms = struct.make(first=first, foreach=foreach, all=all, any=any, allnot=allnot, new_collection=new_collection)
+transforms = struct.make(new_collection=new_collection, has_attrs=has_attrs)
