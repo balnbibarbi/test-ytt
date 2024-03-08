@@ -47,24 +47,20 @@ end
 def _(*args):
   return args
 end
-def has_attr_with_value(obj, attr_name, attr_value):
-  return hasattr(obj, attr_name) and getattr(obj, attr_name) == attr_value
+def _has_attr_with_value(obj, attr_name, attr_value):
+  return _create_object(obj).has_attr_with_value(attr_name, attr_value)
 end
 def _getattrnames(obj):
-  return dir(obj)
+  return _create_object(obj).getattrnames()
 end
 def getattrs(obj):
-  attr_names = _getattrnames(obj)
-  return { attr_name: getattr(obj, attr_name) for attr_name in attr_names }
+  return _create_object(obj).getattrs()
 end
-def extend(original, **new_attrs):
-  attrs = getattrs(original)
-  attrs.update(new_attrs)
-  return struct.make(**attrs)
+def _extend(original, **new_attrs):
+  return _create_object(original).extend(**new_attrs)
 end
 def merge(obj1, obj2):
-  additional_attrs = getattrs(obj2)
-  return extend(obj1, **additional_attrs)
+  return _create_object(obj1).merge(obj2)
 end
 def curry(func, *args_to_curry, **kwargs_to_curry):
   args_to_curry_wrapper = [ args_to_curry ]
@@ -82,8 +78,24 @@ def _create_object(*args, **kwargs):
   def _getattrnames():
     return dir(this)
   end
+  def _getattrs():
+    attr_names = this.getattrnames()
+    return { attr_name: getattr(this, attr_name) for attr_name in attr_names }
+  end
+  def merge(other_obj):
+    additional_attrs = getattrs(other_obj)
+    return _extend(this, **additional_attrs)
+  end
+  def _has_attr_with_value(attr_name, attr_value):
+    return hasattr(this, attr_name) and getattr(this, attr_name) == attr_value
+  end
+  def _extend(**new_attrs):
+    attrs = getattrs(this)
+    attrs.update(new_attrs)
+    return object.create(**attrs)
+  end
   this = struct.make(*args, **kwargs)
   return this
 end
-object = struct.make(create=_create_object, getattrnames=_getattrnames)
-dump = struct.make(dump=dump_many, dump_attrs=dump_attrs_many, getattrs=getattrs, merge=merge, extend=extend, _=_, to_primitive=to_primitive, curry=curry, object=object)
+object = struct.make(create=_create_object, getattrnames=_getattrnames, has_attr_with_value=_has_attr_with_value)
+dump = struct.make(dump=dump_many, dump_attrs=dump_attrs_many, getattrs=getattrs, merge=merge, extend=_extend, _=_, to_primitive=to_primitive, curry=curry, object=object)
