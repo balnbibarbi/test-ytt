@@ -50,11 +50,11 @@ end
 def has_attr_with_value(obj, attr_name, attr_value):
   return hasattr(obj, attr_name) and getattr(obj, attr_name) == attr_value
 end
-def getattrnames(obj):
+def _getattrnames(obj):
   return dir(obj)
 end
 def getattrs(obj):
-  attr_names = getattrnames(obj)
+  attr_names = _getattrnames(obj)
   return { attr_name: getattr(obj, attr_name) for attr_name in attr_names }
 end
 def extend(original, **new_attrs):
@@ -71,9 +71,19 @@ def curry(func, *args_to_curry, **kwargs_to_curry):
   kwargs_to_curry_wrapper = [ kwargs_to_curry ]
   def curried_func(*args, **kwargs):
     args_to_curry = args_to_curry_wrapper[0] + args
-    kwargs_to_curry_wrapper[0].update(kwargs)
-    return func(*args_to_curry, **kwargs_to_curry_wrapper[0])
+    kwargs_to_curry = kwargs_to_curry_wrapper[0]
+    kwargs_to_curry.update(kwargs)
+    return func(*args_to_curry, **kwargs_to_curry)
   end
   return curried_func
 end
-dump = struct.make(dump=dump_many, dump_attrs=dump_attrs_many, getattrs=getattrs, merge=merge, extend=extend, _=_, to_primitive=to_primitive, curry=curry)
+def _create_object(*args, **kwargs):
+  this = None
+  def _getattrnames():
+    return dir(this)
+  end
+  this = struct.make(*args, **kwargs)
+  return this
+end
+object = struct.make(create=_create_object, getattrnames=_getattrnames)
+dump = struct.make(dump=dump_many, dump_attrs=dump_attrs_many, getattrs=getattrs, merge=merge, extend=extend, _=_, to_primitive=to_primitive, curry=curry, object=object)
