@@ -246,21 +246,21 @@ def new_collection(things):
 end
 # Test whether the given dict has all of the given
 # entries, with the given values.
-def has_attrs(object, **attrs):
-  def _attr_ison_object(attr, object):
-    (attr_name, attr_value) = attr
-    if attr_name not in object:
+def has_entries(the_dict, **entries):
+  def _entry_ison_dict(entry, the_dict):
+    (entry_name, entry_value) = entry
+    if entry_name not in the_dict:
       return False
-    elif object[attr_name] != attr_value:
+    elif the_dict[entry_name] != entry_value:
       return False
     end
     return True
   end
-  collection = new_collection(attrs)
-  return collection.all(_attr_ison_object, object)
+  collection = new_collection(entries)
+  return collection.all(_entry_ison_dict, object)
 end
 # FIXME: Violates the DRY principle - thrice!
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,
 # appending all functions to each source file, to disuse load
-transforms = struct.make(new_collection=new_collection, has_attrs=has_attrs)
+transforms = struct.make(new_collection=new_collection, has_entries=has_entries)

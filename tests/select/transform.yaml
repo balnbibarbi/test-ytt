@@ -4,7 +4,7 @@
 #@ def do_transform(input, _):
 #@   # dump.dump("Input:", input)
 #@   collection = transforms.new_collection(input)
-#@   matching_object = collection.select(lambda x: transforms.has_attrs(x, colour="red", shape="circle")).first()
+#@   matching_object = collection.select(lambda x: transforms.has_entries(x, colour="red", shape="circle")).first()
 #@   dump.dump("Matching object:", matching_object)
 #@   matching_object["is_matching"] = "yes"
 #@   integers = transforms.new_collection([ 1, 2, 3, 4, 5, 6, 7, 8, 9 ])
