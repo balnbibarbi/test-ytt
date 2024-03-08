@@ -1,32 +1,23 @@
 load("@ytt:struct", "struct")
 load("@ytt:yaml", "yaml")
 load("dump.star", dump="dump")
-def _compose(func1, func2):
-  def _composed(*args, **kwargs):
-    return func1(func2(*args, **kwargs))
-  end
-  return _composed
-end
-def _(*args):
-  return args
-end
 def _make_step(receive_func, tostr_func, **extra_params):
-  def tostr():
+  def step_tostr():
     return "Step<" + repr(receive_func) + ">"
   end
   return struct.make(receive_item=receive_func, tostr=tostr_func, **extra_params)
 end
 def _make_null_step():
-  def tostr():
+  def null_step_tostr():
     return "NullStep<>"
   end
   def _receive(thing, *args, **kwargs):
     return True
   end
-  return _make_step(_receive, tostr)
+  return _make_step(_receive, null_step_tostr)
 end
 def _make_transform_step(next_step, transform_func, *transform_args, **transform_kwargs):
-  def tostr():
+  def transform_step_tostr():
     return "TransformStep<" + repr(transform_func) + ">"
   end
   def _receive(thing, *args, **kwargs):
@@ -40,10 +31,10 @@ def _make_transform_step(next_step, transform_func, *transform_args, **transform
       **kwargs
     )
   end
-  return _make_step(_receive, tostr, transform_args=transform_args, transform_kwargs=transform_kwargs)
+  return _make_step(_receive, transform_step_tostr, transform_args=transform_args, transform_kwargs=transform_kwargs)
 end
 def _make_count_step(next_step):
-  def tostr():
+  def count_step_tostr():
     return "CountStep<>"
   end
   count = [ 0 ]
@@ -54,10 +45,10 @@ def _make_count_step(next_step):
   def _get_count():
     return count[0]
   end
-  return _make_step(_receive, tostr, count=_get_count)
+  return _make_step(_receive, count_step_tostr, count=_get_count)
 end
 def _make_filter_step(next_step, filter_func, stop_on_success=False, stop_on_failure=False):
-  def tostr():
+  def filter_step_tostr():
     return "FilterStep<" + repr(filter_func) + ">"
   end
   def _receive(thing, *args, **kwargs):
@@ -80,10 +71,10 @@ def _make_filter_step(next_step, filter_func, stop_on_success=False, stop_on_fai
     end
     return ret
   end
-  return _make_step(_receive, tostr)
+  return _make_step(_receive, filter_step_tostr)
 end
 def _make_collect_input_step(next_step, collection):
-  def tostr():
+  def collect_input_step_tostr():
     return "CollectStep<" + repr(collection) + ">"
   end
   def _receive(thing, *args, **kwargs):
@@ -98,10 +89,10 @@ def _make_collect_input_step(next_step, collection):
   def _get_collection():
     return collection
   end
-  return _make_step(_receive, tostr, collection=_get_collection)
+  return _make_step(_receive, collect_input_step_tostr, collection=_get_collection)
 end
 def _make_remember_last_step(next_step):
-  def tostr():
+  def remember_last_step_tostr():
     return "RememberLastStep<>"
   end
   last_seen = [ None ]
@@ -112,26 +103,30 @@ def _make_remember_last_step(next_step):
   def _get_last_seen():
     return last_seen[0]
   end
-  return _make_step(_receive, tostr, last_seen=_get_last_seen)
+  return _make_step(_receive, remember_last_step_tostr, last_seen=_get_last_seen)
 end
 # Collection class
 def new_collection(things):
   this = None
-  if type(things) == "yamlfragment":
-    things = dump.to_primitive(things)
-  end
-  def iterable():
-    if type(this.items) == "list":
-      iterable = this.items
-    elif type(this.items) == "dict":
-      iterable = this.items.items()
+  def _iterable():
+    if type(this.things) == "yamlfragment":
+      iterable = dump.to_primitive(this.things)
     else:
-      iterable = this.items
+      iterable = this.things
+    end
+    if type(iterable) == "list":
+      iterable = iterable
+    elif type(iterable) == "dict":
+      iterable = iterable.items()
+    elif type(iterable) == "struct":
+      iterable = iterable
+    else:
+      iterable = iterable
     end
     return iterable
   end
   # First member of collection that has given predicate, or None
-  def first(filter_func=_, *args, **kwargs):
+  def first(filter_func=dump._, *args, **kwargs):
     remember_last = _make_remember_last_step(
       _make_null_step()
     )
@@ -146,7 +141,7 @@ def new_collection(things):
   end
   # Sub-collection of collection whose members have given predicate
   def select(filter_func, *args, **kwargs):
-    if type(this.iterable()) == "list":
+    if type(this._iterable()) == "list":
       subset = []
     else:
       subset = {}
@@ -224,23 +219,33 @@ def new_collection(things):
     # FIXME: Need a distinction between stopping a pipeline run for an object,
     # and stopping further pipeline runs for successive objects.
     keep_iterating = True
-    for thing in this.iterable():
+    for thing in this._iterable():
       if not keep_iterating:
         break
       end
       keep_iterating = step.receive_item(thing, *args, **kwargs)
     end
   end
-  def tostr():
-    return "Collection<" + repr(things) + ">"
+  def collection_tostr():
+    if this:
+      return "Collection<" + repr(this._iterable()) + ">"
+    else:
+      return "Collection<Empty>"
+    end
+  end
+  def _get_items():
+    return this.things
+  end
+  if type(things) == "yamlfragment":
+    things = dump.to_primitive(things)
   end
   this = struct.make(
-    tostr=tostr, items=things, iterable=iterable, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, iterate=_iterate
+    things=things, tostr=collection_tostr, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, _iterable=_iterable, iterate=_iterate, items=_get_items
   )
   return this
 end
-# Test whether the given object has all of the given
-# attributes, with the given values.
+# Test whether the given dict has all of the given
+# entries, with the given values.
 def has_attrs(object, **attrs):
   def _attr_ison_object(attr, object):
     (attr_name, attr_value) = attr

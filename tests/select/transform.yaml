@@ -23,7 +23,7 @@
 #@   dump.dump("Any even square equal to 36?", even_squares.any(lambda x: x == 36 ))
 #@   dump.dump("First even square equal to 36", even_squares.first(lambda x: x == 36 ))
 #@   dump.dump("Any even square not equal to 36?", even_squares.any(lambda x: x != 36 ))
-#@   return collection.items
+#@   return collection.items()
 #@ end
 #@overlay/match by=overlay.all, expects="1+"
 #@overlay/replace via=do_transform
