@@ -257,7 +257,7 @@ def has_entries(the_dict, **entries):
     return True
   end
   collection = new_collection(entries)
-  return collection.all(_entry_ison_dict, object)
+  return collection.all(_entry_ison_dict, the_dict)
 end
 # FIXME: Violates the DRY principle - thrice!
 # Seems no way to import * in ytt
