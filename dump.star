@@ -6,7 +6,7 @@ load("@ytt:yaml", "yaml")
 def to_primitive(yaml_fragment):
   return yaml.decode(yaml.encode(yaml_fragment))
 end
-def _dump_one(thing):
+def _dump_one(thing, **thing_kwargs):
   if type(thing) == "yamlfragment":
     # yamlfragments serialise to useless strings
     thing = to_primitive(thing)
@@ -28,9 +28,9 @@ def _dump_attrs_one(obj):
   _dump_one(getattrs(obj))
   print("*** End detailed dump of object")
 end
-def dump_many(*things):
+def dump_many(*things, **thing_kwargs):
   for thing in things:
-    _dump_one(thing)
+    _dump_one(thing, **thing_kwargs)
   end
 end
 def dump_attrs_many(*things):
@@ -66,4 +66,14 @@ def merge(obj1, obj2):
   additional_attrs = getattrs(obj2)
   return extend(obj1, **additional_attrs)
 end
-dump = struct.make(dump=dump_many, dump_attrs=dump_attrs_many, getattrs=getattrs, merge=merge, extend=extend, _=_, to_primitive=to_primitive)
+def curry(func, *args_to_curry, **kwargs_to_curry):
+  args_to_curry_wrapper = [ args_to_curry ]
+  kwargs_to_curry_wrapper = [ kwargs_to_curry ]
+  def curried_func(*args, **kwargs):
+    args_to_curry = args_to_curry_wrapper[0] + args
+    kwargs_to_curry_wrapper[0].update(kwargs)
+    return func(*args_to_curry, **kwargs_to_curry_wrapper[0])
+  end
+  return curried_func
+end
+dump = struct.make(dump=dump_many, dump_attrs=dump_attrs_many, getattrs=getattrs, merge=merge, extend=extend, _=_, to_primitive=to_primitive, curry=curry)
