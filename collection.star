@@ -3,6 +3,7 @@ load("@ytt:yaml", "yaml")
 load("dump.star", "dump")
 load("object.star", "object")
 load("step.star", "step")
+
 # Collection class
 def new_collection(things):
   this = None
@@ -142,6 +143,7 @@ def new_collection(things):
   )
   return this
 end
+
 # Test whether the given dict has all of the given
 # entries, with the given values.
 def has_entries(the_dict, **entries):
@@ -157,6 +159,7 @@ def has_entries(the_dict, **entries):
   collection = new_collection(entries)
   return collection.all(_entry_ison_dict, the_dict)
 end
+
 # FIXME: Violates the DRY principle - thrice!
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,

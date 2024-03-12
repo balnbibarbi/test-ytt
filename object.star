@@ -1,4 +1,5 @@
 load("@ytt:struct", "struct")
+
 def _compose(func1, func2):
   if func2 == None:
     return func1
@@ -10,6 +11,7 @@ def _compose(func1, func2):
   end
   return _composed
 end
+
 def curry(func, *args_to_curry, **kwargs_to_curry):
   args_to_curry_wrapper = [ args_to_curry ]
   kwargs_to_curry_wrapper = [ kwargs_to_curry ]
@@ -21,6 +23,7 @@ def curry(func, *args_to_curry, **kwargs_to_curry):
   end
   return curried_func
 end
+
 def _compose_all(*funcs):
   cur_func = None
   for next_func in funcs:
@@ -28,24 +31,31 @@ def _compose_all(*funcs):
   end
   return cur_func
 end
+
 def _(*args):
   return args
 end
+
 def _has_attr_with_value(obj, attr_name, attr_value):
   return _create_object(obj).has_attr_with_value(attr_name, attr_value)
 end
+
 def _getattrnames(obj):
   return _create_object(obj).getattrnames()
 end
+
 def getattrs(obj):
   return _create_object(obj).getattrs()
 end
+
 def _extend(original, **new_attrs):
   return _create_object(original).extend(**new_attrs)
 end
+
 def merge(obj1, obj2):
   return _create_object(obj1).merge(obj2)
 end
+
 def _create_object(*args, **kwargs):
   this = None
   def _getattrnames():
@@ -70,4 +80,5 @@ def _create_object(*args, **kwargs):
   this = struct.make(*args, **kwargs)
   return this
 end
+
 object = struct.make(create=_create_object, getattrnames=_getattrnames, has_attr_with_value=_has_attr_with_value, getattrs=getattrs, merge=merge, extend=_extend, _=_, curry=curry, compose=_compose_all)
