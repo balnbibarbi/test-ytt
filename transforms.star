@@ -1,11 +1,12 @@
 load("@ytt:struct", "struct")
 load("@ytt:yaml", "yaml")
 load("dump.star", dump="dump")
+load("object.star", object="object")
 def _make_step(receive_func, tostr_func, **extra_params):
   def step_tostr():
     return "Step<" + repr(receive_func) + ">"
   end
-  return dump.object.create(receive_item=receive_func, tostr=tostr_func, **extra_params)
+  return object.create(receive_item=receive_func, tostr=tostr_func, **extra_params)
 end
 def _make_null_step():
   def null_step_tostr():
@@ -126,7 +127,7 @@ def new_collection(things):
     return iterable
   end
   # First member of collection that has given predicate, or None
-  def first(filter_func=dump._, *args, **kwargs):
+  def first(filter_func=object._, *args, **kwargs):
     remember_last = _make_remember_last_step(
       _make_null_step()
     )
@@ -239,7 +240,7 @@ def new_collection(things):
   if type(things) == "yamlfragment":
     things = dump.to_primitive(things)
   end
-  this = dump.object.create(
+  this = object.create(
     things=things, tostr=collection_tostr, first=first, select=select, map=map, foreach=foreach, all=all, any=any, allnot=allnot, _iterable=_iterable, iterate=_iterate, items=_get_items
   )
   return this
