@@ -103,4 +103,4 @@ def _make_remember_last_step(next_step):
   end
   return _make_step(_receive, remember_last_step_tostr, last_seen=_get_last_seen)
 end
-step = object.create(_make_null_step=_make_null_step, _make_transform_step=_make_transform_step, _make_count_step=_make_count_step, _make_filter_step=_make_filter_step, _make_collect_input_step=_make_collect_input_step, _make_remember_last_step=_make_remember_last_step)
+step = object.create(create_null=_make_null_step, create_transform=_make_transform_step, create_count=_make_count_step, create_filter=_make_filter_step, create_collector=_make_collect_input_step, create_remember_last=_make_remember_last_step)
