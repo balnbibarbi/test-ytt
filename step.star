@@ -1,20 +1,27 @@
 load("object.star", "object")
-def _make_step(receive_func, tostr_func, **extra_params):
+def _make_abstract_step(receive_func, tostr_func, **extra_params):
+  this = None
   def step_tostr():
     return "Step<" + repr(receive_func) + ">"
   end
-  return object.create(receive_item=receive_func, tostr=tostr_func, **extra_params)
+  this = object.create(receive_item=receive_func, tostr=tostr_func, **extra_params)
+  return this
 end
+abstract_step = object.create(create=_make_abstract_step)
 def _make_null_step():
+  this = None
   def null_step_tostr():
     return "NullStep<>"
   end
   def _receive(thing, *args, **kwargs):
     return True
   end
-  return _make_step(_receive, null_step_tostr)
+  this = _make_abstract_step(_receive, null_step_tostr)
+  return this
 end
+null_step = object.create(create=_make_null_step)
 def _make_transform_step(next_step, transform_func, *transform_args, **transform_kwargs):
+  this = None
   def transform_step_tostr():
     return "TransformStep<" + repr(transform_func) + ">"
   end
@@ -29,23 +36,29 @@ def _make_transform_step(next_step, transform_func, *transform_args, **transform
       **kwargs
     )
   end
-  return _make_step(_receive, transform_step_tostr, transform_args=transform_args, transform_kwargs=transform_kwargs)
+  this = _make_abstract_step(_receive, transform_step_tostr, transform_args=transform_args, transform_kwargs=transform_kwargs)
+  return this
 end
+transform_step = object.create(create=_make_transform_step)
 def _make_count_step(next_step):
+  this = None
+  counter = [ 0 ]
   def count_step_tostr():
     return "CountStep<>"
   end
-  count = [ 0 ]
   def _receive(thing, *args, **kwargs):
-    count[0] += 1
+    counter[0] += 1
     return next_step.receive_item(thing, *args, **kwargs)
   end
   def _get_count():
-    return count[0]
+    return counter[0]
   end
-  return _make_step(_receive, count_step_tostr, count=_get_count)
+  this = _make_abstract_step(_receive, count_step_tostr, count=_get_count)
+  return this
 end
+count_step = object.create(create=_make_count_step)
 def _make_filter_step(next_step, filter_func, stop_on_success=False, stop_on_failure=False):
+  this = None
   def filter_step_tostr():
     return "FilterStep<" + repr(filter_func) + ">"
   end
@@ -69,9 +82,12 @@ def _make_filter_step(next_step, filter_func, stop_on_success=False, stop_on_fai
     end
     return ret
   end
-  return _make_step(_receive, filter_step_tostr)
+  this = _make_abstract_step(_receive, filter_step_tostr)
+  return this
 end
+filter_step = object.create(create = _make_filter_step)
 def _make_collect_input_step(next_step, collection):
+  this = None
   def collect_input_step_tostr():
     return "CollectStep<" + repr(collection) + ">"
   end
@@ -87,9 +103,12 @@ def _make_collect_input_step(next_step, collection):
   def _get_collection():
     return collection
   end
-  return _make_step(_receive, collect_input_step_tostr, collection=_get_collection)
+  this = _make_abstract_step(_receive, collect_input_step_tostr, collection=_get_collection)
+  return this
 end
+collect_input_step = object.create(create=_make_collect_input_step)
 def _make_remember_last_step(next_step):
+  this = None
   def remember_last_step_tostr():
     return "RememberLastStep<>"
   end
@@ -101,6 +120,8 @@ def _make_remember_last_step(next_step):
   def _get_last_seen():
     return last_seen[0]
   end
-  return _make_step(_receive, remember_last_step_tostr, last_seen=_get_last_seen)
+  this = _make_abstract_step(_receive, remember_last_step_tostr, last_seen=_get_last_seen)
+  return this
 end
-step = object.create(create_null=_make_null_step, create_transform=_make_transform_step, create_count=_make_count_step, create_filter=_make_filter_step, create_collector=_make_collect_input_step, create_remember_last=_make_remember_last_step)
+remember_last_step = object.create(create=_make_remember_last_step)
+step = object.create(null=null_step, transform=transform_step, count=count_step, filter=filter_step, collect_input=collect_input_step, remember_last=remember_last_step)

@@ -25,10 +25,10 @@ def new_collection(things):
   end
   # First member of collection that has given predicate, or None
   def first(filter_func=object._, *args, **kwargs):
-    remember_last = step.create_remember_last(
-      step.create_null()
+    remember_last = step.remember_last.create(
+      step.null.create()
     )
-    pipeline = step.create_filter(
+    pipeline = step.filter.create(
       remember_last,
       filter_func,
       stop_on_success=True,
@@ -44,9 +44,9 @@ def new_collection(things):
     else:
       subset = {}
     end
-    pipeline = step.create_filter(
-      step.create_collector(
-        step.create_null(),
+    pipeline = step.filter.create(
+      step.collect_input.create(
+        step.null.create(),
         subset
       ),
       filter_func,
@@ -59,9 +59,9 @@ def new_collection(things):
   # Convert collection to another collection via a transformer function
   def map(transform_func, *args, **kwargs):
     destination = []
-    pipeline = step.create_transform(
-      step.create_collector(
-        step.create_null(),
+    pipeline = step.transform.create(
+      step.collect_input.create(
+        step.null.create(),
         destination
       ),
       transform_func
@@ -72,8 +72,8 @@ def new_collection(things):
   # Pass each member of the collection to a function,
   # without keeping the results of the called function.
   def foreach(func, *args, **kwargs):
-    pipeline = step.create_transform(
-      step.create_null(),
+    pipeline = step.transform.create(
+      step.null.create(),
       func
     )
     ret = this.iterate(pipeline, *args, **kwargs)
@@ -81,11 +81,11 @@ def new_collection(things):
   end
   # Does every member have the given predicate?
   def all(filter_func, *args, **kwargs):
-    post_filter_counter = step.create_count(
-      step.create_null()
+    post_filter_counter = step.count.create(
+      step.null.create()
     )
-    pre_filter_counter = step.create_count(
-      step.create_filter(
+    pre_filter_counter = step.count.create(
+      step.filter.create(
           post_filter_counter,
           filter_func,
           stop_on_success=False,
@@ -97,10 +97,10 @@ def new_collection(things):
   end
   # Does any member have the given predicate?
   def any(filter_func, *args, **kwargs):
-    post_filter_counter = step.create_count(
-      step.create_null()
+    post_filter_counter = step.count.create(
+      step.null.create()
     )
-    pipeline = step.create_filter(
+    pipeline = step.filter.create(
       post_filter_counter,
       filter_func,
       stop_on_success=True,
