@@ -264,4 +264,4 @@ end
 # Seems no way to import * in ytt
 # TODO: Work around this by pre-processing this YAML code,
 # appending all functions to each source file, to disuse load
-transforms = struct.make(new_collection=new_collection, has_entries=has_entries)
+collection = struct.make(create=new_collection, has_entries=has_entries)

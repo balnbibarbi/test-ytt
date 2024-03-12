@@ -1,13 +1,13 @@
 #@ load("@ytt:overlay", "overlay")
-#@ load("transforms.star", "transforms")
+#@ load("collection.star", "collection")
 #@ load("dump.star", "dump")
 #@ def do_transform(input, _):
 #@   # dump.dump("Input:", input)
-#@   collection = transforms.new_collection(input)
-#@   matching_object = collection.select(lambda x: transforms.has_entries(x, colour="red", shape="circle")).first()
+#@   my_collection = collection.create(input)
+#@   matching_object = my_collection.select(lambda x: collection.has_entries(x, colour="red", shape="circle")).first()
 #@   dump.dump("Matching object:", matching_object)
 #@   matching_object["is_matching"] = "yes"
-#@   integers = transforms.new_collection([ 1, 2, 3, 4, 5, 6, 7, 8, 9 ])
+#@   integers = collection.create([ 1, 2, 3, 4, 5, 6, 7, 8, 9 ])
 #@   dump.dump("Integers:", integers)
 #@   squares = integers.map(lambda x: x * x )
 #@   dump.dump("Squares:", squares)
@@ -23,7 +23,7 @@
 #@   dump.dump("Any even square equal to 36?", even_squares.any(lambda x: x == 36 ))
 #@   dump.dump("First even square equal to 36", even_squares.first(lambda x: x == 36 ))
 #@   dump.dump("Any even square not equal to 36?", even_squares.any(lambda x: x != 36 ))
-#@   return collection.items()
+#@   return my_collection.items()
 #@ end
 #@overlay/match by=overlay.all, expects="1+"
 #@overlay/replace via=do_transform

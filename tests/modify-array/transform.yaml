@@ -1,4 +1,4 @@
-#@ load("transforms.star", "transforms")
+#@ load("collection.star", "collection")
 #@ load("@ytt:overlay", "overlay")
 #@ load("dump.star", "dump")
 #@ def do_transform(input, _):
