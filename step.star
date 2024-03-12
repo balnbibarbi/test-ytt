@@ -1,4 +1,5 @@
 load("object.star", "object")
+load("clazz.star", "clazz")
 def _make_abstract_step(receive_func, tostr_func, **extra_params):
   this = None
   def step_tostr():
@@ -7,7 +8,7 @@ def _make_abstract_step(receive_func, tostr_func, **extra_params):
   this = object.create(receive_item=receive_func, tostr=tostr_func, **extra_params)
   return this
 end
-abstract_step = object.create(create=_make_abstract_step)
+abstract_step = clazz.create(_make_abstract_step)
 def _make_null_step():
   this = None
   def null_step_tostr():
